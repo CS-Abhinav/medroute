@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MedRoute – Rider</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/lib/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header id="topbar"></header>
+<div class="app">
+  <aside class="sidebar">
+    <div class="section">
+      <h3 id="riderTitle">My route</h3>
+      <div class="muted small" id="riderInfo"></div>
+    </div>
+    <div class="section">
+      <h3>Stops (optimised order)</h3>
+      <div class="list" id="stops"></div>
+    </div>
+  </aside>
+  <main class="map-wrap"><div id="map" class="map"></div></main>
+</div>
+<script src="/lib/leaflet/leaflet.js"></script>
+<script src="/js/common.js"></script>
+<script src="/js/rider.js"></script>
+
+</body>
+</html>

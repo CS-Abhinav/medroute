@@ -47,14 +47,39 @@ lib/routing.js       OSRM distance matrix / route geometry with haversine fallba
 lib/screening.js     Prescription screening rules + scoring
 lib/store.js         In-memory database + seeded demo users
 data/                Chennai datasets: 28 pharmacies, 30 medicines, rider hubs, service-area polygon
-public/              Frontend (vanilla HTML/CSS/JS + Leaflet)
-  index.html         Login / register
-  customer.html      Shop + map + checkout + prescription upload
-  order.html         Waiting-for-approval screen → live tracking
-  pharmacist.html    Review queue
-  admin.html         Dispatch + GIS analysis + benchmark
-  rider.html         Rider route view
+public/              Frontend (vanilla HTML / CSS / JS + Leaflet)
+  html/              Pages (served from the site root, e.g. /customer.html)
+    index.html         Login / register
+    customer.html      Shop + map + checkout + prescription upload
+    order.html         Waiting-for-approval screen → live tracking
+    pharmacist.html    Review queue
+    admin.html         Dispatch + GIS analysis + benchmark
+    rider.html         Rider route view
+  css/style.css      All styling
+  js/                Page scripts
+    common.js          Auth, API helper, Leaflet map factory, icons
+    login.js           Login / register page
+    customer.js        Shop, delivery location, buffer query, pharmacy ranking, isochrones, checkout
+    prescription.js    PDF text / OCR extraction, blur score, sample prescription generator
+    order.js           Waiting screen + live tracking
+    pharmacist.js      Prescription review queue
+    admin.js           Dispatch console, Voronoi, coverage, heatmap, isochrones, benchmark
+    rider.js           Rider route view
+  lib/               Third-party libraries (local copies)
+    leaflet/           Leaflet 1.9.4 (js, css, images)
+    leaflet-markercluster/  Leaflet.markercluster 1.5.3
+    leaflet-heat/      Leaflet.heat 0.2.0
+    turf/              Turf.js 6.5.0 (spatial analysis)
+    pdfjs/             pdf.js 3.11.174 + worker
+    tesseract/         Tesseract.js 5.1.1 + worker
 ```
+
+The libraries are bundled in `public/lib`, so the pages don't depend on CDNs for code. Some things still need internet:
+- Map tiles (OpenStreetMap, Esri).
+- OSRM road routing. Without it, the app falls back to straight-line distance × 1.35.
+- Nominatim address search.
+- Tesseract's OCR engine and English language data, downloaded from jsDelivr on first use.
+- The Inter web font, which falls back to the system font.
 
 ## Route optimisation
 

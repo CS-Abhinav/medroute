@@ -18,6 +18,9 @@ fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
+// Pages live in public/html but are served from the site root (/, /customer.html, ...);
+// css/, js/ and lib/ (Leaflet and other libraries) are served from public/
+app.use(express.static(path.join(__dirname, 'public', 'html')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const upload = multer({

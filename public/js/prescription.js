@@ -11,7 +11,7 @@ const Rx = {
   },
 
   async fromPdf(file, onProgress) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/lib/pdfjs/pdf.worker.min.js';
     const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
     let text = '';
     for (let p = 1; p <= Math.min(pdf.numPages, 3); p++) {
@@ -30,7 +30,9 @@ const Rx = {
   },
 
   async ocr(canvas, onProgress) {
+    // Worker is served locally; the OCR engine (WASM) and English language data are fetched from the jsDelivr CDN
     const res = await Tesseract.recognize(canvas, 'eng', {
+      workerPath: '/lib/tesseract/worker.min.js',
       logger: m => { if (m.status === 'recognizing text') onProgress(m.progress, 'Reading text (OCR)'); else onProgress(0.05, m.status); }
     });
     return { text: res.data.text, confidence: res.data.confidence };
