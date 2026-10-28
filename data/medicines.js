@@ -1,0 +1,35 @@
+// Sample medicine catalogue.
+// rx: true  -> prescription required (Schedule H / H1 under Indian Drugs & Cosmetics Rules)
+// coldChain -> must be delivered within COLD_CHAIN_MAX_MIN of pickup
+module.exports = [
+  { id: 'M01', name: 'Paracetamol 500mg', generic: 'Paracetamol', category: 'Fever & Pain', price: 25, rx: false, coldChain: false, pack: '15 tablets' },
+  { id: 'M02', name: 'Paracetamol 650mg', generic: 'Paracetamol', category: 'Fever & Pain', price: 32, rx: false, coldChain: false, pack: '15 tablets' },
+  { id: 'M03', name: 'Ibuprofen 400mg', generic: 'Ibuprofen', category: 'Fever & Pain', price: 38, rx: false, coldChain: false, pack: '15 tablets' },
+  { id: 'M04', name: 'Cetirizine 10mg', generic: 'Cetirizine', category: 'Allergy', price: 22, rx: false, coldChain: false, pack: '10 tablets' },
+  { id: 'M05', name: 'Levocetirizine 5mg', generic: 'Levocetirizine', category: 'Allergy', price: 48, rx: false, coldChain: false, pack: '10 tablets' },
+  { id: 'M06', name: 'ORS Electrolyte Sachet', generic: 'Oral Rehydration Salts', category: 'General', price: 20, rx: false, coldChain: false, pack: '1 sachet' },
+  { id: 'M07', name: 'Vitamin D3 60000 IU', generic: 'Cholecalciferol', category: 'Vitamins', price: 120, rx: false, coldChain: false, pack: '4 capsules' },
+  { id: 'M08', name: 'Vitamin C 500mg', generic: 'Ascorbic Acid', category: 'Vitamins', price: 60, rx: false, coldChain: false, pack: '15 tablets' },
+  { id: 'M09', name: 'Antacid Gel 170ml', generic: 'Magnesium Hydroxide + Aluminium Hydroxide', category: 'Digestive', price: 110, rx: false, coldChain: false, pack: '170 ml' },
+  { id: 'M10', name: 'Cough Syrup 100ml', generic: 'Dextromethorphan', category: 'Cold & Cough', price: 95, rx: false, coldChain: false, pack: '100 ml' },
+  { id: 'M11', name: 'Antiseptic Liquid 250ml', generic: 'Chloroxylenol', category: 'First Aid', price: 140, rx: false, coldChain: false, pack: '250 ml' },
+  { id: 'M12', name: 'Crepe Bandage 10cm', generic: 'Bandage', category: 'First Aid', price: 85, rx: false, coldChain: false, pack: '1 roll' },
+  { id: 'M13', name: 'Digital Thermometer', generic: 'Thermometer', category: 'Devices', price: 250, rx: false, coldChain: false, pack: '1 unit' },
+  { id: 'M14', name: 'Multivitamin Tablets', generic: 'Multivitamin', category: 'Vitamins', price: 180, rx: false, coldChain: false, pack: '30 tablets' },
+  { id: 'M15', name: 'Amoxicillin 500mg', generic: 'Amoxicillin', category: 'Antibiotics', price: 95, rx: true, coldChain: false, pack: '10 capsules' },
+  { id: 'M16', name: 'Azithromycin 500mg', generic: 'Azithromycin', category: 'Antibiotics', price: 120, rx: true, coldChain: false, pack: '3 tablets' },
+  { id: 'M17', name: 'Ciprofloxacin 500mg', generic: 'Ciprofloxacin', category: 'Antibiotics', price: 70, rx: true, coldChain: false, pack: '10 tablets' },
+  { id: 'M18', name: 'Metformin 500mg', generic: 'Metformin', category: 'Diabetes', price: 45, rx: true, coldChain: false, pack: '20 tablets' },
+  { id: 'M19', name: 'Glimepiride 2mg', generic: 'Glimepiride', category: 'Diabetes', price: 110, rx: true, coldChain: false, pack: '15 tablets' },
+  { id: 'M20', name: 'Insulin Glargine Pen', generic: 'Insulin Glargine', category: 'Diabetes', price: 780, rx: true, coldChain: true, pack: '3 ml pen' },
+  { id: 'M21', name: 'Amlodipine 5mg', generic: 'Amlodipine', category: 'Heart & BP', price: 40, rx: true, coldChain: false, pack: '15 tablets' },
+  { id: 'M22', name: 'Telmisartan 40mg', generic: 'Telmisartan', category: 'Heart & BP', price: 85, rx: true, coldChain: false, pack: '15 tablets' },
+  { id: 'M23', name: 'Atorvastatin 10mg', generic: 'Atorvastatin', category: 'Heart & BP', price: 95, rx: true, coldChain: false, pack: '15 tablets' },
+  { id: 'M24', name: 'Levothyroxine 50mcg', generic: 'Levothyroxine', category: 'Thyroid', price: 130, rx: true, coldChain: false, pack: '100 tablets' },
+  { id: 'M25', name: 'Pantoprazole 40mg', generic: 'Pantoprazole', category: 'Digestive', price: 90, rx: true, coldChain: false, pack: '15 tablets' },
+  { id: 'M26', name: 'Salbutamol Inhaler', generic: 'Salbutamol', category: 'Respiratory', price: 160, rx: true, coldChain: false, pack: '200 doses' },
+  { id: 'M27', name: 'Montelukast 10mg', generic: 'Montelukast', category: 'Respiratory', price: 150, rx: true, coldChain: false, pack: '10 tablets' },
+  { id: 'M28', name: 'Hepatitis B Vaccine', generic: 'Hepatitis B Vaccine', category: 'Vaccines', price: 450, rx: true, coldChain: true, pack: '1 vial' },
+  { id: 'M29', name: 'Prednisolone 10mg', generic: 'Prednisolone', category: 'Steroids', price: 35, rx: true, coldChain: false, pack: '10 tablets' },
+  { id: 'M30', name: 'Ondansetron 4mg', generic: 'Ondansetron', category: 'Digestive', price: 55, rx: true, coldChain: false, pack: '10 tablets' }
+];

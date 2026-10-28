@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MedRoute – Dispatch & GIS console</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header id="topbar"></header>
+<div class="app" style="grid-template-columns:430px 1fr">
+  <aside class="sidebar">
+    <div class="tabs">
+      <button data-tab="dispatch" class="active">Dispatch</button>
+      <button data-tab="gis">GIS analysis</button>
+      <button data-tab="bench">Algorithm</button>
+    </div>
+
+    <!-- DISPATCH -->
+    <div data-pane="dispatch">
+      <div class="section">
+        <div class="stats">
+          <div class="stat"><b id="stReview">0</b><span>Pharmacist review</span></div>
+          <div class="stat"><b id="stWaiting">0</b><span>Awaiting dispatch</span></div>
+          <div class="stat"><b id="stTransit">0</b><span>In transit</span></div>
+          <div class="stat"><b id="stDelivered">0</b><span>Delivered</span></div>
+          <div class="stat"><b id="stRiders">0/6</b><span>Riders busy</span></div>
+          <div class="stat"><b id="stRouting" class="small">–</b><span>Road network</span></div>
+        </div>
+      </div>
+      <div class="section">
+        <h3>Controls</h3>
+        <label class="switch"><input type="checkbox" id="autoDispatch"> Auto-dispatch (batch window <span id="bwLabel">10</span>s)</label>
+        <div class="row" style="margin:.4rem 0">
+          <label for="simSpeed" style="margin:0">Simulation speed</label>
+          <select id="simSpeed" style="width:auto"><option value="15">15×</option><option value="30">30×</option><option value="60">60×</option><option value="120">120×</option></select>
+          <span class="muted small">(change while riders are idle)</span>
+        </div>
+        <div class="row wrap" style="margin-top:.5rem">
+          <input type="number" id="demoCount" value="10" min="1" max="25" style="width:70px">
+          <button class="btn" id="genDemo">+ Demo orders</button>
+          <button class="btn primary" id="runOpt">⚡ Optimise & dispatch</button>
+          <button class="btn sm ghost" id="resetBtn" title="Reset all orders & riders">↺ Reset</button>
+        </div>
+      </div>
+      <div class="section" id="resultSection">
+        <h3>Last optimisation</h3>
+        <div id="result" class="muted">No dispatch yet. Generate demo orders, then click <b>Optimise & dispatch</b>.</div>
+      </div>
+      <div class="section">
+        <h3>Riders</h3>
+        <div class="list" id="riderList"></div>
+      </div>
+      <div class="section">
+        <h3>Recent orders</h3>
+        <div class="list" id="orderList"></div>
+      </div>
+    </div>
+
+    <!-- GIS -->
+    <div data-pane="gis" class="hidden">
+      <div class="section">
+        <h3>Spatial layers</h3>
+        <label class="switch"><input type="checkbox" id="gHeat"> Demand heatmap (historical orders)</label>
+        <label class="switch"><input type="checkbox" id="gVoronoi"> Pharmacy territories (Voronoi) shaded by demand</label>
+        <label class="switch"><input type="checkbox" id="gCoverage"> 24×7 coverage gaps (2.5 km buffers)</label>
+        <label class="switch"><input type="checkbox" id="gNearest"> Nearest-pharmacy tool (click map)</label>
+        <div id="gisInfo" class="muted small" style="margin-top:.5rem"></div>
+      </div>
+      <div class="section">
+        <h3>Isochrones (delivery-time zones)</h3>
+        <div class="row"><select id="isoPharmacy"></select><button class="btn sm primary" id="isoBtn">Draw</button><button class="btn sm" id="isoClear">Clear</button></div>
+        <div class="muted small" style="margin-top:.4rem">Travel time from the pharmacy to a 0.7 km grid, using OSRM road distances. Bands are built with Turf isobands and clipped to the service area.</div>
+        <div id="isoInfo" class="small" style="margin-top:.4rem"></div>
+      </div>
+      <div class="section">
+        <h3>Territory statistics</h3>
+        <div id="territoryStats" class="muted small">Enable the Voronoi layer to compute area and demand per pharmacy.</div>
+      </div>
+    </div>
+
+    <!-- BENCHMARK -->
+    <div data-pane="bench" class="hidden">
+      <div class="section">
+        <h3>How the optimiser works</h3>
+        <ol class="small" style="padding-left:1.1rem;line-height:1.6">
+          <li><b>Distance matrix</b>: road distances between all riders, pharmacies and customers (OSRM Table API, haversine × 1.35 fallback).</li>
+          <li><b>Regret-2 insertion</b>: orders that would lose the most by waiting are inserted first, at the cheapest (pickup, drop) position in any rider's route.</li>
+          <li><b>Simulated annealing</b>: random relocate / exchange / 2-opt / or-opt moves; worse solutions are sometimes accepted to escape local minima.</li>
+          <li><b>Local-search polish</b>: deterministic 2-opt + or-opt until no improvement.</li>
+        </ol>
+        <div class="small muted">Constraints: pickup before drop, rider capacity, cold-chain ≤ 40 min, busy riders continue from their last stop. Objective = rider time + 0.5 × Σ(priority weight × delivery time).</div>
+      </div>
+      <div class="section">
+        <h3>Benchmark vs exact optimum</h3>
+        <div class="muted small">Random single-rider instance in Chennai, solved exactly with Held-Karp dynamic programming (O(2ⁿ·n²) with precedence) and with the heuristic.</div>
+        <div class="row" style="margin-top:.5rem">
+          <label for="benchN" style="margin:0">Orders</label>
+          <select id="benchN" style="width:auto"><option>4</option><option>5</option><option selected>6</option><option>7</option></select>
+          <button class="btn primary sm" id="benchBtn">Run benchmark</button>
+        </div>
+        <div id="benchOut" style="margin-top:.6rem"></div>
+      </div>
+    </div>
+  </aside>
+  <main class="map-wrap"><div id="map" class="map"></div></main>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
+<script src="/js/common.js"></script>
+<script src="/js/admin.js"></script>
+</body>
+</html>

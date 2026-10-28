@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MedRoute – Pharmacist review</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header id="topbar"></header>
+<div class="app" style="grid-template-columns:380px 1fr">
+  <aside class="sidebar">
+    <div class="tabs">
+      <button data-tab="pending" class="active">Pending <span class="count hidden" id="pendingCount">0</span></button>
+      <button data-tab="recent">Recent decisions</button>
+    </div>
+    <div class="section"><div class="list" id="queue"></div></div>
+  </aside>
+  <main style="overflow-y:auto;padding:1rem">
+    <div id="detail" class="muted" style="padding:2rem;text-align:center">Select a prescription from the queue to review it.</div>
+  </main>
+</div>
+<script src="/js/common.js"></script>
+<script>
+  const user = Auth.require('pharmacist', 'admin');
+  renderTopbar(user);
+  let tab = 'pending', data = { pending: [], recent: [] }, selected = null;
+
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+    tab = b.dataset.tab;
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('active', x === b));
+    renderQueue();
+  });
+
+  async function load() {
+    data = await api('/api/pharmacist/queue');
+    pendingCount.textContent = data.pending.length;
+    pendingCount.classList.toggle('hidden', !data.pending.length);
+    renderQueue();
+    if (selected) {
+      const o = [...data.pending, ...data.recent].find(x => x.id === selected);
+      if (o && !document.getElementById('rejectReason')?.matches(':focus')) renderDetail(o, false);
+    }
+  }
+
+  function renderQueue() {
+    const list = data[tab];
+    queue.innerHTML = list.length ? list.map(o => {
+      const sc = o.prescription.screening;
+      return `<div class="item clickable ${o.id === selected ? 'selected' : ''}" data-id="${o.id}">
+        <div class="grow"><div class="title">${o.id} · ${esc(o.customerName)}</div>
+        <div class="muted small">${o.items.filter(i => i.rx).map(i => esc(i.name)).join(', ')}</div>
+        <div class="muted small">${new Date(o.createdAt).toLocaleTimeString()} · ${esc(o.pickup.name)}</div></div>
+        <div style="text-align:right">${statusBadge(o.status)}<div class="small" style="margin-top:4px">${sc ? 'Score ' + sc.score : 'screening…'}</div></div></div>`;
+    }).join('') : `<div class="muted">${tab === 'pending' ? 'No prescriptions waiting. 🎉' : 'No decisions yet.'}</div>`;
+    queue.querySelectorAll('[data-id]').forEach(el => el.onclick = () => {
+      selected = el.dataset.id;
+      renderQueue();
+      renderDetail([...data.pending, ...data.recent].find(x => x.id === selected), true);
+    });
+  }
+
+  let renderedKey = '';
+  function renderDetail(o, force) {
+    const key = o.id + o.status + (o.prescription.screening?.screenedAt || '');
+    if (!force && key === renderedKey) return;
+    renderedKey = key;
+    const sc = o.prescription.screening;
+    const fileUrl = `${o.prescription.url}?token=${Auth.token}`;
+    const canDecide = o.status === 'pending_review' || (o.status === 'approved' && o.approvedBy === 'Automated screening' && !o.riderId);
+    detail.className = '';
+    detail.innerHTML = `
+      <div class="row" style="margin-bottom:1rem"><h2 style="margin:0">${o.id}</h2>${statusBadge(o.status)}<div class="spacer"></div>
+        <span class="muted small">Customer: <b>${esc(o.customerName)}</b></span></div>
+      <div class="grid2" style="gap:1rem;align-items:start">
+        <div class="card">
+          <h3>Uploaded prescription</h3>
+          <div class="muted small">${esc(o.prescription.originalName)} · ${(o.prescription.size / 1024).toFixed(0)} KB · SHA-256 ${o.prescription.hash.slice(0, 12)}…</div>
+          ${o.prescription.mime === 'application/pdf'
+            ? `<iframe src="${fileUrl}" style="width:100%;height:520px;border:1px solid var(--line);border-radius:8px;margin-top:.5rem"></iframe>`
+            : `<a href="${fileUrl}" target="_blank"><img src="${fileUrl}" style="width:100%;border:1px solid var(--line);border-radius:8px;margin-top:.5rem"></a>`}
+          <details style="margin-top:.5rem"><summary class="small">OCR text</summary><pre class="small" style="white-space:pre-wrap">${esc(o.prescription.ocrText || '(none)')}</pre></details>
+        </div>
+        <div class="list">
+          <div class="card">
+            <h3>Automated screening</h3>
+            ${sc ? `<div class="row"><div class="score-ring" style="--p:${sc.score};--c:${sc.score >= 80 ? 'var(--ok)' : sc.score >= 45 ? 'var(--warn)' : 'var(--danger)'};margin:0"><span>${sc.score}</span></div>
+              <div class="muted small">${esc(sc.summary)}</div></div>
+              <div class="checks">${sc.checks.map(c => `<div class="check"><span class="ic">${c.pass >= 1 ? '✅' : c.pass > 0 ? '⚠️' : '❌'}</span>
+                <div style="flex:1"><div>${esc(c.name)} <span class="muted small">(weight ${c.weight})</span></div><div class="detail">${esc(c.detail)}</div></div></div>`).join('')}</div>`
+              : '<div class="muted">Screening in progress…</div>'}
+          </div>
+          <div class="card">
+            <h3>Ordered items</h3>
+            ${o.items.map(i => `<div class="kv"><span>${esc(i.name)} × ${i.qty}</span><span>${i.rx ? '<span class="badge rx">Rx</span>' : '<span class="badge grey">OTC</span>'}</span></div>`).join('')}
+          </div>
+          ${canDecide ? `<div class="card">
+            <h3>Decision</h3>
+            <div class="field"><label for="rejectReason">Reason (shown to customer if rejected)</label>
+              <textarea id="rejectReason" rows="2" placeholder="e.g. Prescription expired, medicine not prescribed…"></textarea></div>
+            <div class="row"><button class="btn primary" id="approveBtn">✓ Approve</button><button class="btn danger" id="rejectBtn">✕ Reject</button></div>
+          </div>` : `<div class="muted small">${o.approvedBy ? 'Approved by ' + esc(o.approvedBy) : esc(o.rejectionReason || '')}</div>`}
+        </div>
+      </div>`;
+    if (canDecide) {
+      approveBtn.onclick = () => decide(o.id, 'approve');
+      rejectBtn.onclick = () => decide(o.id, 'reject', rejectReason.value);
+    }
+  }
+
+  async function decide(id, decision, reason) {
+    try {
+      await api(`/api/pharmacist/orders/${id}/decision`, { method: 'POST', body: { decision, reason } });
+      toast(decision === 'approve' ? `${id} approved` : `${id} rejected`);
+      await load();
+      const o = [...data.pending, ...data.recent].find(x => x.id === id);
+      if (o) renderDetail(o, true);
+    } catch (e) { toast(e.message); }
+  }
+
+  load();
+  setInterval(load, 3000);
+</script>
+</body>
+</html>

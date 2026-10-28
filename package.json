@@ -1,0 +1,14 @@
+{
+  "name": "medroute",
+  "version": "1.0.0",
+  "description": "MedRoute - Web GIS medicine delivery with route optimisation (Chennai demo)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test:optimizer": "node lib/optimizer.test.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}

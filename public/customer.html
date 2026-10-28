@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MedRoute – Order medicines</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header id="topbar"></header>
+<div class="app">
+  <aside class="sidebar">
+    <div class="tabs">
+      <button data-tab="shop" class="active">Medicines</button>
+      <button data-tab="cart">Cart <span class="count hidden" id="cartCount">0</span></button>
+      <button data-tab="orders">My orders</button>
+    </div>
+
+    <!-- SHOP -->
+    <div data-pane="shop">
+      <div class="section">
+        <h3>📍 Delivery location</h3>
+        <div id="locText" class="muted">Click the map, search an address, or use your location.</div>
+        <div id="locStatus" class="small" style="margin-top:4px"></div>
+        <div class="row" style="margin-top:.5rem">
+          <button class="btn sm" id="locateBtn">◎ Use my location</button>
+          <span class="muted small">or drag the orange pin</span>
+        </div>
+      </div>
+      <div class="section">
+        <input type="search" id="medSearch" placeholder="Search medicines, generics or categories…">
+        <div class="chips" id="catChips"></div>
+        <div class="list" id="medList"></div>
+      </div>
+    </div>
+
+    <!-- CART -->
+    <div data-pane="cart" class="hidden">
+      <div class="section">
+        <h3>Your cart</h3>
+        <div class="list" id="cartList"></div>
+        <div id="cartEmpty" class="muted">Cart is empty. Add medicines from the Medicines tab.</div>
+      </div>
+      <div id="checkout" class="hidden">
+        <div class="section">
+          <h3>Delivery speed</h3>
+          <div class="chips">
+            <button class="chip active" data-priority="normal">Standard</button>
+            <button class="chip" data-priority="urgent">🚨 Urgent (+₹40)</button>
+          </div>
+          <div class="muted small">Urgent orders are weighted 3× in the route optimiser, so they reach you first.</div>
+        </div>
+        <div class="section">
+          <h3>Pharmacy (ranked by road distance)</h3>
+          <div class="list" id="phRank"><div class="muted">Set a delivery location to find pharmacies.</div></div>
+        </div>
+        <div class="section hidden" id="rxSection">
+          <h3>📄 Prescription required</h3>
+          <div class="muted small" id="rxMeds"></div>
+          <label class="upload-box" id="dropZone" for="rxFile" style="margin-top:.5rem">
+            <div><b>Upload PDF / JPG / PNG</b> (max 5 MB)</div>
+            <div class="muted small">Click or drop the file here</div>
+            <img id="rxPreview" class="hidden" alt="Prescription preview">
+            <div id="rxFileName" class="small"></div>
+          </label>
+          <input type="file" id="rxFile" accept="application/pdf,image/jpeg,image/png" hidden>
+          <div class="row wrap" style="margin-top:.5rem">
+            <span class="muted small">No prescription handy?</span>
+            <button class="btn sm" id="sampleGood">Use sample (valid)</button>
+            <button class="btn sm" id="samplePoor">Use sample (poor)</button>
+          </div>
+          <div id="ocrBox" class="hidden" style="margin-top:.6rem">
+            <div class="small" id="ocrStatus">Preparing OCR…</div>
+            <div class="progress"><div id="ocrBar"></div></div>
+            <details style="margin-top:.4rem"><summary class="small muted">Extracted text</summary>
+              <pre id="ocrText" class="small" style="white-space:pre-wrap;max-height:140px;overflow:auto"></pre></details>
+          </div>
+        </div>
+        <div class="section">
+          <h3>Bill</h3>
+          <div class="kv"><span>Items</span><span id="billItems">₹0</span></div>
+          <div class="kv"><span>Delivery fee <span class="muted small" id="billKm"></span></span><span id="billFee">–</span></div>
+          <div class="kv total"><span>Total</span><span id="billTotal">₹0</span></div>
+          <div class="field" style="margin-top:.6rem">
+            <label for="payment">Payment</label>
+            <select id="payment"><option value="cod">Cash on delivery</option><option value="upi">UPI (demo)</option></select>
+          </div>
+          <div class="error" id="orderError"></div>
+          <button class="btn primary block" id="placeOrder" disabled>Place order</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div data-pane="orders" class="hidden">
+      <div class="section"><div class="list" id="orderList"></div></div>
+    </div>
+  </aside>
+
+  <main class="map-wrap">
+    <div class="map-search">
+      <input type="search" id="addrSearch" placeholder="Search an address in Chennai (OpenStreetMap Nominatim)…">
+      <div class="search-results hidden" id="addrResults"></div>
+    </div>
+    <div id="map" class="map"></div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="/js/common.js"></script>
+<script src="/js/prescription.js"></script>
+<script src="/js/customer.js"></script>
+</body>
+</html>

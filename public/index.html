@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MedRoute – Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="auth-page">
+  <section class="auth-hero">
+    <div id="heroMap"></div>
+    <div class="logo" style="color:#fff"><span class="mark" style="background:#fff;color:#0b7a6b">✚</span> MedRoute</div>
+    <div>
+      <h1>Medicines delivered by the shortest road, not a guess.</h1>
+      <ul>
+        <li>28 partner pharmacies across Chennai on a live GIS map</li>
+        <li>Prescription screening with in-browser OCR</li>
+        <li>Multi-rider route optimisation (regret insertion + simulated annealing)</li>
+        <li>Live rider tracking, isochrones, demand heatmaps</li>
+      </ul>
+    </div>
+    <div class="small" style="opacity:.8">College GIS course project · Chennai demo data</div>
+  </section>
+
+  <section class="auth-form">
+    <div class="card">
+      <div id="loginView">
+        <h2>Welcome back</h2>
+        <p class="muted">Sign in to continue</p>
+        <form id="loginForm">
+          <div class="field"><label for="username">Username</label><input type="text" id="username" autocomplete="username" required></div>
+          <div class="field"><label for="password">Password</label><input type="password" id="password" autocomplete="current-password" required></div>
+          <div class="error" id="loginError"></div>
+          <button class="btn primary block" type="submit">Sign in</button>
+        </form>
+        <p class="muted small" style="text-align:center">New customer? <a href="#" id="showRegister">Create an account</a></p>
+        <div class="demo-accounts">
+          <div class="muted">Demo accounts (click to fill):</div>
+          <button class="btn sm" data-u="customer" data-p="customer123">Customer</button>
+          <button class="btn sm" data-u="pharmacist" data-p="pharma123">Pharmacist</button>
+          <button class="btn sm" data-u="admin" data-p="admin123">Admin / Dispatch</button>
+          <button class="btn sm" data-u="rider1" data-p="rider123">Rider</button>
+        </div>
+      </div>
+
+      <div id="registerView" class="hidden">
+        <h2>Create account</h2>
+        <form id="registerForm">
+          <div class="field"><label for="rName">Full name (as on prescriptions)</label><input type="text" id="rName" required></div>
+          <div class="field"><label for="rPhone">Phone</label><input type="text" id="rPhone"></div>
+          <div class="field"><label for="rUser">Username</label><input type="text" id="rUser" required></div>
+          <div class="field"><label for="rPass">Password (min 6 characters)</label><input type="password" id="rPass" required></div>
+          <div class="error" id="regError"></div>
+          <button class="btn primary block" type="submit">Create account</button>
+        </form>
+        <p class="muted small" style="text-align:center"><a href="#" id="showLogin">Back to sign in</a></p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/js/common.js"></script>
+<script>
+  if (Auth.token && Auth.user) location.href = Auth.home(Auth.user.role);
+
+  const hero = L.map('heroMap', { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false })
+    .setView(CHENNAI, 12);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}').addTo(hero);
+
+  document.querySelectorAll('.demo-accounts button').forEach(b => b.onclick = () => {
+    document.getElementById('username').value = b.dataset.u;
+    document.getElementById('password').value = b.dataset.p;
+  });
+  document.getElementById('showRegister').onclick = e => { e.preventDefault(); loginView.classList.add('hidden'); registerView.classList.remove('hidden'); };
+  document.getElementById('showLogin').onclick = e => { e.preventDefault(); registerView.classList.add('hidden'); loginView.classList.remove('hidden'); };
+
+  document.getElementById('loginForm').onsubmit = async e => {
+    e.preventDefault();
+    loginError.textContent = '';
+    try {
+      const { token, user } = await api('/api/auth/login', { method: 'POST', body: { username: username.value, password: password.value } });
+      Auth.save(token, user);
+      location.href = Auth.home(user.role);
+    } catch (err) { loginError.textContent = err.message; }
+  };
+  document.getElementById('registerForm').onsubmit = async e => {
+    e.preventDefault();
+    regError.textContent = '';
+    try {
+      const { token, user } = await api('/api/auth/register', { method: 'POST', body: { name: rName.value, phone: rPhone.value, username: rUser.value, password: rPass.value } });
+      Auth.save(token, user);
+      location.href = Auth.home(user.role);
+    } catch (err) { regError.textContent = err.message; }
+  };
+</script>
+</body>
+</html>
